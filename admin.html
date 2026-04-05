@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+
+/* DASHBOARD STATS */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat-box {
+    background: #f0fbff;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #00aaff;
+    color: white;
+}
+
+td, th {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+/* STATUS COLORS */
+.pending { color: orange; font-weight: bold; }
+.completed { color: green; font-weight: bold; }
+.cancelled { color: red; font-weight: bold; }
+
+/* BUTTONS */
+.action-btn {
+    padding: 5px 8px;
+    margin: 2px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-pending { background: orange; color: white; }
+.btn-complete { background: green; color: white; }
+.btn-cancel { background: red; color: white; }
+
+/* SEARCH */
+.search-bar {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+/* FILTER */
+.filter {
+    margin-bottom: 10px;
+}
+
+/* PRINT */
+@media print {
+    .no-print { display: none; }
+    body { background: white; }
+}
+
+</style>
+</head>
+
+<body>
+
+<script>
+if(localStorage.getItem("session") !== "admin"){
+    alert("Unauthorized");
+    location = "index.html";
+}
+</script>
+
+<div class="navbar no-print">
+  <div class="nav-container">
+    <div class="logo">💧 Admin Dashboard</div>
+  </div>
+</div>
+
+<div class="page">
+<div class="card">
+
+<h2>📊 Orders Dashboard</h2>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-box" id="totalOrders">0 Orders</div>
+  <div class="stat-box" id="pendingOrders">0 Pending</div>
+  <div class="stat-box" id="completedOrders">0 Completed</div>
+  <div class="stat-box" id="cancelledOrders">0 Cancelled</div>
+</div>
+
+<!-- SEARCH -->
+<input type="text" class="search-bar no-print" id="search" placeholder="Search name or service...">
+
+<!-- FILTER -->
+<select class="filter no-print" id="filter">
+  <option value="all">All</option>
+  <option value="Pending">Pending</option>
+  <option value="Completed">Completed</option>
+  <option value="Cancelled">Cancelled</option>
+</select>
+
+<button class="secondary no-print" onclick="window.print()">🖨️ Print</button>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Service</th>
+<th>Address</th>
+<th>Date</th>
+<th>Status</th>
+<th class="no-print">Actions</th>
+</tr>
+</thead>
+
+<tbody id="ordersTable"></tbody>
+</table>
+
+</div>
+</div>
+
+<script>
+
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+const table = document.getElementById("ordersTable");
+const searchInput = document.getElementById("search");
+const filterSelect = document.getElementById("filter");
+
+/* RENDER */
+function renderOrders(){
+
+let search = searchInput.value.toLowerCase();
+let filter = filterSelect.value;
+
+table.innerHTML = "";
+
+let filtered = orders.filter(o => {
+    let matchSearch =
+        o.name.toLowerCase().includes(search) ||
+        o.service.toLowerCase().includes(search);
+
+    let matchFilter =
+        filter === "all" || o.status === filter;
+
+    return matchSearch && matchFilter;
+});
+
+/* EMPTY */
+if(filtered.length === 0){
+    table.innerHTML = `<tr><td colspan="6">No matching orders 💧</td></tr>`;
+    return;
+}
+
+/* DISPLAY */
+filtered.forEach((o, i) => {
+    let statusClass = o.status.toLowerCase();
+
+    table.innerHTML += `
+    <tr>
+        <td>${o.name}</td>
+        <td>${o.service}</td>
+        <td>${o.address}</td>
+        <td>${o.date || "-"}</td>
+        <td class="${statusClass}">${o.status}</td>
+
+        <td class="no-print">
+            <button class="action-btn btn-pending" onclick="updateStatus(${i}, 'Pending')">Pending</button>
+            <button class="action-btn btn-complete" onclick="updateStatus(${i}, 'Completed')">Done</button>
+            <button class="action-btn btn-cancel" onclick="updateStatus(${i}, 'Cancelled')">Cancel</button>
+        </td>
+    </tr>
+    `;
+});
+
+/* UPDATE STATS */
+document.getElementById("totalOrders").innerText = orders.length + " Orders";
+document.getElementById("pendingOrders").innerText =
+    orders.filter(o => o.status === "Pending").length + " Pending";
+
+document.getElementById("completedOrders").innerText =
+    orders.filter(o => o.status === "Completed").length + " Completed";
+
+document.getElementById("cancelledOrders").innerText =
+    orders.filter(o => o.status === "Cancelled").length + " Cancelled";
+
+}
+
+/* UPDATE STATUS */
+function updateStatus(index, status){
+    orders[index].status = status;
+    localStorage.setItem("orders", JSON.stringify(orders));
+    renderOrders();
+}
+
+/* EVENTS */
+searchInput.addEventListener("input", renderOrders);
+filterSelect.addEventListener("change", renderOrders);
+
+renderOrders();
+
+</script>
+
+</body>
+</html>

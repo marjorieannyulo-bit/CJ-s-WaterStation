@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Services</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+.section {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.section h3 {
+    margin-bottom: 8px;
+    color: #0077aa;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.info-box {
+    background: #f5fbff;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+select, input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+.fade {
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+
+    <div class="logo" ondblclick="adminAccess()">
+      <img src="logo.jpeg">
+    </div>
+
+    <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="app.html?view=services">Services</a>
+      <a href="auth.html">Login</a>
+    </div>
+
+  </div>
+</nav>
+
+<div class="page">
+<div class="card fade" id="content"></div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const view = params.get("view");
+const content = document.getElementById("content");
+
+/* MAIN SERVICES */
+if(view === "services"){
+content.innerHTML = `
+<h2>Our Services</h2>
+
+<div class="grid">
+
+<div class="service-card">
+<img src="refill.jpeg">
+<h3>Water Refill</h3>
+<button class="primary" onclick="orderNow('refill')">Order Now</button>
+<button class="secondary" onclick="viewDetails('refill')">View Details</button>
+</div>
+
+<div class="service-card">
+<img src="deliver.jpeg">
+<h3>Delivery</h3>
+<button class="secondary" onclick="viewDetails('delivery')">View Details</button>
+</div>
+
+<div class="service-card">
+<img src="bottle.jpeg">
+<h3>Containers</h3>
+<button class="primary" onclick="orderNow('container')">Order Now</button>
+<button class="secondary" onclick="viewDetails('container')">View Details</button>
+</div>
+
+</div>
+`;
+}
+
+/* VIEW DETAILS ONLY */
+function viewDetails(type){
+
+if(type === "refill"){
+content.innerHTML = `
+<h2>Water Refill Service</h2>
+
+<div class="section">
+<p>Clean and safe purified water using multi-stage filtration.</p>
+</div>
+
+<div class="section">
+<h3>💡 Highlights</h3>
+<div class="info-grid">
+<div class="info-box">Multi-stage filtration</div>
+<div class="info-box">UV sterilization</div>
+<div class="info-box">Quality checked</div>
+<div class="info-box">Safe drinking water</div>
+</div>
+</div>
+
+<button class="secondary" onclick="goBack()">Back</button>
+`;
+}
+
+if(type === "container"){
+content.innerHTML = `
+<h2>Water Containers</h2>
+
+<div class="section">
+<p>Durable and safe containers for long-term use.</p>
+</div>
+
+<div class="info-grid">
+<div class="info-box">BPA-free</div>
+<div class="info-box">Leak-proof</div>
+<div class="info-box">Reusable</div>
+</div>
+
+<button class="secondary" onclick="goBack()">Back</button>
+`;
+}
+
+if(type === "delivery"){
+content.innerHTML = `
+<h2>Delivery Service</h2>
+
+<div class="section">
+<p>Fast and convenient home delivery.</p>
+</div>
+
+<div class="info-grid">
+<div class="info-box">₱50 - ₱100 Fee</div>
+<div class="info-box">1–3 hours</div>
+</div>
+
+<button class="secondary" onclick="goBack()">Back</button>
+`;
+}
+
+}
+
+/* ORDER FORM ONLY */
+function orderNow(type){
+
+content.innerHTML = `
+<h2>Order - ${type}</h2>
+
+<input placeholder="Full Name" id="name">
+<input placeholder="Address" id="address">
+<input placeholder="Contact Number" id="phone">
+
+<select id="size">
+<option value="">Select Size</option>
+<option>5 Gallons</option>
+<option>10 Gallons</option>
+<option>15 Gallons</option>
+</select>
+
+<input type="number" placeholder="Quantity" id="qty">
+<input type="date" id="date">
+
+<button class="primary" onclick="submitOrder('${type}')">Submit Order</button>
+<button class="secondary" onclick="goBack()">Back</button>
+`;
+
+}
+
+/* SUBMIT ORDER */
+function submitOrder(type){
+
+if(!localStorage.getItem("session")){
+location="auth.html";
+return;
+}
+
+let name = document.getElementById("name").value;
+let address = document.getElementById("address").value;
+let phone = document.getElementById("phone").value;
+let size = document.getElementById("size")?.value;
+let qty = document.getElementById("qty")?.value;
+let date = document.getElementById("date")?.value;
+
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+orders.push({
+user: localStorage.getItem("session"),
+service: type,
+name,
+address,
+phone,
+size,
+qty,
+date,
+status: "Pending"
+});
+
+localStorage.setItem("orders", JSON.stringify(orders));
+
+/* THANK YOU PAGE */
+content.innerHTML = `
+<div class="fade">
+
+<h2>🎉 Thank You for Your Order!</h2>
+
+<div class="section">
+<p>Your order has been successfully placed.</p>
+</div>
+
+<div class="section">
+<h3>📦 Order Summary</h3>
+<div class="info-grid">
+<div class="info-box">Service: ${type}</div>
+<div class="info-box">Name: ${name}</div>
+<div class="info-box">Address: ${address}</div>
+<div class="info-box">Contact: ${phone}</div>
+<div class="info-box">Size: ${size || "N/A"}</div>
+<div class="info-box">Qty: ${qty || "N/A"}</div>
+<div class="info-box">Date: ${date || "N/A"}</div>
+</div>
+</div>
+
+<div class="section">
+<div class="info-box">
+✔ We will process your order<br>
+✔ Expect delivery soon<br>
+✔ Keep your phone active
+</div>
+</div>
+
+<button class="primary" onclick="goBack()">Back to Services</button>
+
+</div>
+`;
+
+}
+
+/* BACK */
+function goBack(){
+location="app.html?view=services";
+}
+
+/* ADMIN */
+function adminAccess(){
+let pass = prompt("Enter admin password:");
+if(pass === "1234"){
+localStorage.setItem("session","admin");
+location = "admin.html";
+}else{
+alert("Access denied");
+}
+}
+</script>
+
+</body>
+</html>
